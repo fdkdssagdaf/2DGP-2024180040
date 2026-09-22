@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026 2DGP · Course Workspace</title>
+  <style>
+    :root{--bg:#0d1117;--panel:#161b22;--panel2:#21262d;--line:#30363d;--text:#f0f6fc;--muted:#8b949e;--blue:#2f81f7;--green:#3fb950;--orange:#d29922}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#0d1117 0%,#111827 55%,#0d1117 100%);color:var(--text);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;min-height:100vh}
+    .top{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 7vw;gap:16px;background:rgba(13,17,23,.9)}.mark{width:30px;height:30px;border:2px solid var(--text);border-radius:50%;display:grid;place-items:center;font-weight:800}.repo{font-weight:700}.repo span{color:var(--muted);font-weight:400}.status{margin-left:auto;color:var(--green);font-size:13px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px}
+    main{max-width:1100px;margin:auto;padding:58px 7vw 80px}.eyebrow{color:var(--muted);font:12px Consolas,monospace;letter-spacing:1.5px;text-transform:uppercase}h1{font-size:clamp(32px,5vw,58px);line-height:1.08;letter-spacing:-1px;margin:12px 0 18px;max-width:760px}h1 em{font-style:normal;color:var(--blue)}.lead{color:#c9d1d9;font-size:18px;max-width:650px;margin-bottom:38px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:rgba(22,27,34,.88);border:1px solid var(--line);border-radius:10px;padding:24px;transition:.2s transform,.2s border-color}.card:hover{transform:translateY(-3px);border-color:#58a6ff}.card h2{font-size:19px;margin:8px 0}.card p{color:var(--muted);margin:0 0 20px}.tag{display:inline-block;color:var(--orange);font:12px Consolas,monospace;border:1px solid #6e551c;border-radius:20px;padding:2px 9px}.actions{display:flex;gap:10px;flex-wrap:wrap}a{color:inherit;text-decoration:none}.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:6px;padding:8px 13px;background:var(--panel2);font-weight:650}.btn.primary{background:var(--blue);border-color:var(--blue);color:white}.btn:hover{filter:brightness(1.12)}.terminal{margin-top:16px;background:#010409;border:1px solid var(--line);border-radius:8px;padding:18px;font:13px/1.8 Consolas,monospace;color:#c9d1d9}.prompt{color:var(--green)}.hint{color:var(--muted);margin-top:8px}.foot{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}.top{padding:0 20px}.status{display:none}main{padding:42px 20px 60px}}
+  </style>
+</head>
+<body>
+  <header class="top"><div class="mark">2D</div><div class="repo">unreal-class <span>/ 2026-2DGP</span></div><div class="status"><span class="dot"></span>workspace ready</div></header>
+  <main>
+    <div class="eyebrow">course workspace · 2026 2d game programming</div>
+    <h1>수업 자료를 <em>한 곳에서</em> 여세요.</h1>
+    <p class="lead">강의 슬라이드, 실습 코드, 캐릭터 이동 영상을 GitHub 저장소처럼 정리했습니다.</p>
+    <section class="grid">
+      <article class="card"><span class="tag">SLIDES · LEC05</span><h2>2D 게임프로그래밍 기초</h2><p>2D 렌더링, 이미지 출력, 좌표계와 게임 루프</p><div class="actions"><a class="btn primary" href="Slides/LEC05_2D게임기초.html">로컬 HTML 열기 ↗</a><a class="btn" href="https://github.com/unreal-class/2026-2DGP/blob/main/Slides/LEC05_2D%EA%B2%8C%EC%9E%84%EA%B8%B0%EC%B4%88.html">GitHub 보기</a></div></article>
+      <article class="card"><span class="tag">SLIDES · LEC06</span><h2>점진적 개발 실습</h2><p>작은 단계로 게임을 완성해 가는 실습 자료</p><div class="actions"><a class="btn primary" href="Slides/LEC06_점진적%20개발%20실습.html">로컬 HTML 열기 ↗</a><a class="btn" href="https://github.com/unreal-class/2026-2DGP/blob/main/Slides/LEC06_%EC%A0%90%EC%A7%84%EC%A0%81%20%EA%B0%9C%EB%B0%9C%20%EC%8B%A4%EC%8A%B5.html">GitHub 보기</a></div></article>
+      <article class="card"><span class="tag">PRACTICE · LEC05</span><h2>캐릭터 이동 실습</h2><p>직사각형과 원형 경로를 각각 실행하고 영상으로 확인</p><div class="actions"><a class="btn primary" href="LEC05/rectangle.py">직사각형 코드</a><a class="btn" href="LEC05/circle.py">원형 코드</a></div></article>
+      <article class="card"><span class="tag">VIDEO · SUBMISSION</span><h2>제출용 결과물</h2><p>Discord 업로드용 H.264 영상 파일</p><div class="actions"><a class="btn primary" href="LEC05/rectangle_motion.mp4">직사각형 영상</a><a class="btn" href="LEC05/circle_motion.mp4">원형 영상</a></div></article>
+    </section>
+    <div class="terminal"><div><span class="prompt">PS&gt;</span> .\pull.bat</div><div class="hint">Git 저장소로 연결한 뒤 최신 자료를 받을 때 실행하세요.</div></div>
+    <div class="foot">Local workspace · GitHub source: <a href="https://github.com/unreal-class/2026-2DGP">unreal-class/2026-2DGP</a></div>
+  </main>
+</body>
+</html>
