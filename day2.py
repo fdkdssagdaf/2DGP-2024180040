@@ -22,7 +22,15 @@ def move_rectangle():
 def move_triangle():
     print('triangle')
 
-while True:
+running = True
+while running:
+    events = get_events()
+    for event in events:
+        if event.type == SDL_QUIT:
+            running = False
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
+            running = False
+
     clear_canvas()
     move_circle()
     move_rectangle()
