@@ -8,17 +8,9 @@ import zlib
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_PNG = os.path.join(OUTPUT_DIR, 'character_sheet.png')
 OUTPUT_JSON = os.path.join(OUTPUT_DIR, 'character_sheet.json')
+SOURCE_PNG = os.path.join(OUTPUT_DIR, 'character.png')
 GAP = 4
-
-INK = (28, 39, 55, 255)
-SKIN = (246, 183, 126, 255)
-HAIR = (45, 48, 72, 255)
-COAT = (40, 153, 151, 255)
-COAT_LIGHT = (96, 206, 185, 255)
-PANTS = (58, 81, 126, 255)
-BOOT = (244, 113, 91, 255)
-SWORD = (229, 250, 246, 255)
-EYE = (29, 37, 49, 255)
+SOURCE_IMAGE = None
 
 
 class PixelCanvas:
@@ -96,108 +88,88 @@ class PixelCanvas:
             image_file.write(png)
 
 
-def draw_limb(canvas, start, end, outline, color, thickness):
-    canvas.line(start, end, outline, thickness + 4)
-    canvas.line(start, end, color, thickness)
-    radius = thickness // 2
-    canvas.ellipse(start[0], start[1], radius + 2, radius + 2, color)
-    canvas.ellipse(end[0], end[1], radius + 2, radius + 2, color)
+def load_source_image(path=SOURCE_PNG):
+    with open(path, 'rb') as image_file:
+        data = image_file.read()
+    if data[:8] != b'\x89PNG\r\n\x1a\n':
+        raise ValueError('Character source must be a PNG image')
+
+    position = 8
+    image_data = bytearray()
+    while position < len(data):
+        length = struct.unpack('>I', data[position:position + 4])[0]
+        chunk_type = data[position + 4:position + 8]
+        chunk_data = data[position + 8:position + 8 + length]
+        position += length + 12
+        if chunk_type == b'IHDR':
+            width, height, bit_depth, color_type, compression, filtering, interlace = struct.unpack(
+                '>IIBBBBB', chunk_data,
+            )
+            if (bit_depth, color_type, interlace) != (8, 6, 0):
+                raise ValueError('Character PNG must be non-interlaced 8-bit RGBA')
+        elif chunk_type == b'IDAT':
+            image_data.extend(chunk_data)
+        elif chunk_type == b'IEND':
+            break
+
+    stride = width * 4
+    filtered = zlib.decompress(image_data)
+    pixels = bytearray(height * stride)
+
+    def paeth(left, above, upper_left):
+        estimate = left + above - upper_left
+        distances = (abs(estimate - left), abs(estimate - above), abs(estimate - upper_left))
+        return (left, above, upper_left)[distances.index(min(distances))]
+
+    source_position = 0
+    for y in range(height):
+        filter_type = filtered[source_position]
+        source_position += 1
+        row_start = y * stride
+        for x in range(stride):
+            raw = filtered[source_position]
+            source_position += 1
+            left = pixels[row_start + x - 4] if x >= 4 else 0
+            above = pixels[row_start + x - stride] if y else 0
+            upper_left = pixels[row_start + x - stride - 4] if y and x >= 4 else 0
+            if filter_type == 1:
+                raw += left
+            elif filter_type == 2:
+                raw += above
+            elif filter_type == 3:
+                raw += (left + above) // 2
+            elif filter_type == 4:
+                raw += paeth(left, above, upper_left)
+            elif filter_type != 0:
+                raise ValueError(f'Unsupported PNG filter: {filter_type}')
+            pixels[row_start + x] = raw & 255
+
+    return width, height, pixels
 
 
 def draw_character(canvas, action, frame_index, frame_count):
-    width, height = canvas.width, canvas.height
-    scale = min(width / 76, height / 100)
-    cx = width // 2
-    ground = height - max(6, round(5 * scale))
-    phase = frame_index / frame_count
-    swing = round(math.sin(phase * math.tau) * 8 * scale) if action == 'walk' else 0
-    bob = round(math.sin(phase * math.tau) * 2 * scale) if action == 'idle' else 0
-    lunge = round(math.sin(phase * math.pi) * 7 * scale) if action == 'attack' else 0
-    jump = round(math.sin(phase * math.pi) * 7 * scale) if action == 'jump' else 0
-    cx += lunge
-    head_radius = max(8, round(12 * scale))
-    thickness = max(5, round(8 * scale))
-    head_y = round(height * 0.25) + bob - jump
-    shoulder_y = round(height * 0.42) + bob - jump
-    hip_y = round(height * 0.66) + bob - jump
-    foot_y = ground - jump
+    global SOURCE_IMAGE
+    if SOURCE_IMAGE is None:
+        SOURCE_IMAGE = load_source_image()
+    source_width, source_height, source_pixels = SOURCE_IMAGE
 
-    if action == 'walk':
-        left_foot = (cx - round(10 * scale) - swing, foot_y)
-        right_foot = (cx + round(10 * scale) + swing, foot_y)
-        left_knee = (cx - round(8 * scale) - swing // 2, round(height * 0.81) - jump)
-        right_knee = (cx + round(8 * scale) + swing // 2, round(height * 0.81) - jump)
-    elif action == 'jump':
-        left_foot = (cx - round(15 * scale), foot_y - round(9 * scale))
-        right_foot = (cx + round(15 * scale), foot_y - round(9 * scale))
-        left_knee = (cx - round(12 * scale), round(height * 0.79) - jump)
-        right_knee = (cx + round(12 * scale), round(height * 0.79) - jump)
-    elif action == 'attack':
-        left_foot = (cx - round(15 * scale), foot_y)
-        right_foot = (cx + round(19 * scale), foot_y)
-        left_knee = (cx - round(12 * scale), round(height * 0.81) - jump)
-        right_knee = (cx + round(12 * scale), round(height * 0.79) - jump)
-    else:
-        left_foot = (cx - round(9 * scale), foot_y)
-        right_foot = (cx + round(9 * scale), foot_y)
-        left_knee = (cx - round(8 * scale), round(height * 0.81) - jump)
-        right_knee = (cx + round(8 * scale), round(height * 0.81) - jump)
-
-    hip = (cx, hip_y)
-    draw_limb(canvas, hip, left_knee, INK, PANTS, thickness)
-    draw_limb(canvas, left_knee, left_foot, INK, PANTS, thickness)
-    draw_limb(canvas, hip, right_knee, INK, PANTS, thickness)
-    draw_limb(canvas, right_knee, right_foot, INK, PANTS, thickness)
-    for foot in (left_foot, right_foot):
-        canvas.ellipse(foot[0], foot[1], round(8 * scale), round(4 * scale), BOOT)
-
-    left_shoulder = (cx - round(12 * scale), shoulder_y)
-    right_shoulder = (cx + round(12 * scale), shoulder_y)
-    if action == 'jump':
-        left_hand = (cx - round(26 * scale), shoulder_y - round(18 * scale))
-        right_hand = (cx + round(26 * scale), shoulder_y - round(18 * scale))
-    elif action == 'attack':
-        left_hand = (cx - round(23 * scale), shoulder_y + round(17 * scale))
-        right_hand = (cx + round(31 * scale), shoulder_y - round(3 * scale))
-    else:
-        arm_swing = swing if action == 'walk' else 0
-        left_hand = (cx - round(22 * scale) - arm_swing, shoulder_y + round(22 * scale))
-        right_hand = (cx + round(22 * scale) + arm_swing, shoulder_y + round(22 * scale))
-    draw_limb(canvas, left_shoulder, left_hand, INK, SKIN, thickness)
-    draw_limb(canvas, right_shoulder, right_hand, INK, SKIN, thickness)
-
-    torso = [
-        (cx - round(13 * scale), shoulder_y - round(3 * scale)),
-        (cx + round(13 * scale), shoulder_y - round(3 * scale)),
-        (cx + round(11 * scale), hip_y + round(4 * scale)),
-        (cx - round(11 * scale), hip_y + round(4 * scale)),
-    ]
-    canvas.polygon([(x + 2, y + 3) for x, y in torso], INK)
-    canvas.polygon(torso, COAT)
-    canvas.line((cx, shoulder_y), (cx, hip_y), COAT_LIGHT, max(2, round(3 * scale)))
-
-    canvas.ellipse(cx, head_y, head_radius + 2, head_radius + 2, INK)
-    canvas.ellipse(cx, head_y, head_radius, head_radius, SKIN)
-    canvas.ellipse(cx, head_y - round(5 * scale), head_radius + 1, round(7 * scale), HAIR)
-    canvas.rectangle(cx - head_radius, head_y - round(5 * scale), cx + head_radius + 1, head_y, HAIR)
-    face_direction = 1 if action == 'attack' else 0
-    eye_y = head_y + round(1 * scale)
-    canvas.pixel(cx + face_direction * round(4 * scale), eye_y, EYE)
-    canvas.pixel(cx + face_direction * round(4 * scale) + 1, eye_y, EYE)
-
-    if action == 'attack':
-        blade_start = (right_hand[0] - round(2 * scale), right_hand[1])
-        blade_end = (right_hand[0] + round(25 * scale), right_hand[1] - round(8 * scale))
-        draw_limb(canvas, blade_start, blade_end, INK, SWORD, max(2, round(3 * scale)))
-        canvas.line((blade_end[0] - 2, blade_end[1] + 2), (blade_end[0] + 3, blade_end[1] - 3), BOOT, 2)
+    for y in range(canvas.height):
+        source_y = min(source_height - 1, y * source_height // canvas.height)
+        for x in range(canvas.width):
+            source_x = min(source_width - 1, x * source_width // canvas.width)
+            source_start = (source_y * source_width + source_x) * 4
+            target_start = (y * canvas.width + x) * 4
+            canvas.pixels[target_start:target_start + 4] = source_pixels[source_start:source_start + 4]
 
 
 def build_sheet(output_png=OUTPUT_PNG, output_json=OUTPUT_JSON):
     actions = {'idle': 6, 'walk': 8, 'jump': 5, 'attack': 7}
     sizes = {}
+    source_width, source_height, _ = load_source_image()
     for action, count in actions.items():
+        scales = [1.0, 1.08, 0.96, 1.04, 0.92, 1.12, 0.98, 1.06]
         sizes[action] = [
-            (72 + (index % 3) * 4, 96 + ((index + 1) % 2) * 6)
+            (round(source_width * scales[index]), round(source_height * scales[index]))
             for index in range(count)
         ]
 

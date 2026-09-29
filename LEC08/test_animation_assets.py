@@ -6,7 +6,7 @@ import unittest
 import zlib
 from pathlib import Path
 
-from make_sprite_sheet import PixelCanvas, build_sheet, draw_character
+from make_sprite_sheet import PixelCanvas, build_sheet, draw_character, load_source_image
 
 
 class AnimationAssetTests(unittest.TestCase):
@@ -44,13 +44,22 @@ class AnimationAssetTests(unittest.TestCase):
                 self.assertLessEqual(frame['bottom'] + frame['height'], self.metadata['height'])
             self.assertGreater(len(dimensions), 1)
 
-    def test_each_action_draws_a_distinct_pose(self):
-        poses = set()
-        for action, frames in self.metadata['frames'].items():
-            canvas = PixelCanvas(76, 102)
-            draw_character(canvas, action, 0, len(frames))
-            poses.add(bytes(canvas.pixels))
-        self.assertEqual(len(poses), 4)
+    def test_sheet_uses_the_exact_character_from_lec05(self):
+        source_width, source_height, source_pixels = load_source_image()
+        canvas = PixelCanvas(source_width, source_height)
+        draw_character(canvas, 'idle', 0, 6)
+        self.assertEqual(bytes(canvas.pixels), bytes(source_pixels))
+
+        _, _, sheet_pixels = load_source_image(self.png_path)
+        source_colors = {
+            bytes(source_pixels[index:index + 4])
+            for index in range(0, len(source_pixels), 4)
+        }
+        sheet_colors = {
+            bytes(sheet_pixels[index:index + 4])
+            for index in range(0, len(sheet_pixels), 4)
+        }
+        self.assertEqual(sheet_colors - {b'\x00\x00\x00\x00'}, source_colors)
 
     def test_sheet_generation_is_reproducible(self):
         with tempfile.TemporaryDirectory() as first_dir, tempfile.TemporaryDirectory() as second_dir:

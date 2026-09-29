@@ -1,3 +1,4 @@
+import math
 import json
 import os
 
@@ -23,7 +24,8 @@ running = True
 while running:
     for animation in ANIMATIONS:
         for repeat in range(REPEAT_COUNT):
-            for frame in sprite_frames[animation]:
+            frames = sprite_frames[animation]
+            for frame_index, frame in enumerate(frames):
                 for event in get_events():
                     if event.type == SDL_QUIT or (event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE):
                         running = False
@@ -32,10 +34,23 @@ while running:
                     break
 
                 clear_canvas()
+                progress = frame_index / len(frames)
+                x, y = CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2
+                if animation == 'walk':
+                    x = 270 + progress * 260
+                    y += math.sin(progress * math.tau) * 8
+                elif animation == 'jump':
+                    y = 210 + math.sin(progress * math.pi) * 170
+                elif animation == 'attack':
+                    x = 320 + math.sin(progress * math.pi) * 160
+                else:
+                    x += math.sin(progress * math.tau) * 8
+                    y += math.cos(progress * math.tau) * 6
+
                 draw_width = DISPLAY_HEIGHT * frame['width'] / frame['height']
                 character.clip_draw(
                     frame['left'], frame['bottom'], frame['width'], frame['height'],
-                    CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, draw_width, DISPLAY_HEIGHT,
+                    x, y, draw_width, DISPLAY_HEIGHT,
                 )
                 update_canvas()
                 delay(1 / FPS)
