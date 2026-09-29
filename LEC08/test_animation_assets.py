@@ -6,7 +6,7 @@ import unittest
 import zlib
 from pathlib import Path
 
-from make_sprite_sheet import build_sheet
+from make_sprite_sheet import PixelCanvas, build_sheet, draw_character
 
 
 class AnimationAssetTests(unittest.TestCase):
@@ -43,6 +43,14 @@ class AnimationAssetTests(unittest.TestCase):
                 self.assertLessEqual(frame['left'] + frame['width'], self.metadata['width'])
                 self.assertLessEqual(frame['bottom'] + frame['height'], self.metadata['height'])
             self.assertGreater(len(dimensions), 1)
+
+    def test_each_action_draws_a_distinct_pose(self):
+        poses = set()
+        for action, frames in self.metadata['frames'].items():
+            canvas = PixelCanvas(76, 102)
+            draw_character(canvas, action, 0, len(frames))
+            poses.add(bytes(canvas.pixels))
+        self.assertEqual(len(poses), 4)
 
     def test_png_chunks_and_pixel_data_are_valid(self):
         data = self.png_path.read_bytes()
