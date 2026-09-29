@@ -37,26 +37,37 @@ while running:
                 progress = frame_index / len(frames)
                 x, y = CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2
                 if animation == 'walk':
-                    x = 270 + progress * 260
-                    y += math.sin(progress * math.tau) * 8
+                    x = 120 + progress * 560
+                    y += math.sin(progress * math.tau) * 22
                 elif animation == 'jump':
-                    y = 210 + math.sin(progress * math.pi) * 170
+                    x += math.sin(progress * math.tau) * 24
+                    y = 180 + math.sin(progress * math.pi) * 250
                 elif animation == 'attack':
-                    x = 320 + math.sin(progress * math.pi) * 160
+                    if progress < 0.25:
+                        x = 400 - math.sin(progress / 0.25 * math.pi / 2) * 100
+                    elif progress < 0.65:
+                        x = 300 + (progress - 0.25) / 0.4 * 250
+                    else:
+                        x = 550 - (progress - 0.65) / 0.35 * 150
                 else:
-                    x += math.sin(progress * math.tau) * 8
-                    y += math.cos(progress * math.tau) * 6
+                    x += math.sin(progress * math.tau) * 4
+                    y += math.cos(progress * math.tau) * 5
 
                 draw_width = DISPLAY_HEIGHT * frame['width'] / frame['height']
                 character.clip_draw(
                     frame['left'], frame['bottom'], frame['width'], frame['height'],
                     x, y, draw_width, DISPLAY_HEIGHT,
                 )
-                if animation == 'attack' and 0.15 <= progress <= 0.85:
-                    swing = (progress - 0.15) / 0.7
-                    slash_y = y + 20 + math.sin(swing * math.pi) * 45
-                    draw_line(x + 30, slash_y, x + 115, slash_y + 95, 255, 245, 160)
-                    draw_line(x + 45, slash_y - 12, x + 125, slash_y + 75, 130, 235, 255)
+                if animation == 'jump' and 0.15 <= progress <= 0.85:
+                    for streak in range(3):
+                        streak_x = x - 85 + streak * 20
+                        draw_line(streak_x, y - 125, streak_x - 14, y - 80, 150, 225, 255)
+                elif animation == 'attack' and 0.1 <= progress <= 0.9:
+                    swing = (progress - 0.1) / 0.8
+                    slash_y = y + 35 + math.sin(swing * math.pi) * 35
+                    draw_line(x + 20, slash_y, x + 190, slash_y + 145, 255, 236, 110)
+                    draw_line(x + 28, slash_y - 8, x + 198, slash_y + 137, 255, 255, 240)
+                    draw_line(x + 12, slash_y - 16, x + 182, slash_y + 129, 90, 220, 255)
                 update_canvas()
                 delay(1 / FPS)
 
