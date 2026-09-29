@@ -53,6 +53,14 @@ while running:
                     x += math.sin(progress * math.tau) * 4
                     y += math.cos(progress * math.tau) * 5
 
+                draw_line(40, 92, 760, 92, 66, 82, 98)
+                if animation == 'walk':
+                    draw_circle(x - 28, 105, 6, 110, 205, 185, filled=True)
+                    draw_circle(x + 24, 105, 6, 110, 205, 185, filled=True)
+                elif animation == 'jump':
+                    shadow_size = max(10, 38 - int((y - 180) / 9))
+                    draw_circle(400, 105, shadow_size, 95, 110, 125, filled=True)
+
                 draw_width = DISPLAY_HEIGHT * frame['width'] / frame['height']
                 character.clip_draw(
                     frame['left'], frame['bottom'], frame['width'], frame['height'],
@@ -65,9 +73,12 @@ while running:
                 elif animation == 'attack' and 0.1 <= progress <= 0.9:
                     swing = (progress - 0.1) / 0.8
                     slash_y = y + 35 + math.sin(swing * math.pi) * 35
-                    draw_line(x + 20, slash_y, x + 190, slash_y + 145, 255, 236, 110)
-                    draw_line(x + 28, slash_y - 8, x + 198, slash_y + 137, 255, 255, 240)
-                    draw_line(x + 12, slash_y - 16, x + 182, slash_y + 129, 90, 220, 255)
+                    impact_x, impact_y = x + 175, slash_y + 130
+                    draw_line(x + 20, slash_y, impact_x, impact_y, 255, 236, 110)
+                    draw_line(x + 28, slash_y - 8, impact_x + 8, impact_y - 8, 255, 255, 240)
+                    draw_line(x + 12, slash_y - 16, impact_x - 8, impact_y - 16, 90, 220, 255)
+                    draw_line(impact_x - 24, impact_y, impact_x + 24, impact_y, 255, 185, 80)
+                    draw_line(impact_x, impact_y - 24, impact_x, impact_y + 24, 255, 185, 80)
                 update_canvas()
                 delay(1 / FPS)
 

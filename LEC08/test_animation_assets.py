@@ -141,7 +141,7 @@ class AnimationAssetTests(unittest.TestCase):
             and isinstance(node.func, ast.Name)
             and node.func.id == 'draw_line'
         ]
-        self.assertEqual(len(slash_calls), 3)
+        self.assertEqual(len(slash_calls), 5)
 
 
 if __name__ == '__main__':
