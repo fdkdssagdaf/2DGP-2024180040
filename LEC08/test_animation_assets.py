@@ -52,6 +52,17 @@ class AnimationAssetTests(unittest.TestCase):
             poses.add(bytes(canvas.pixels))
         self.assertEqual(len(poses), 4)
 
+    def test_sheet_generation_is_reproducible(self):
+        with tempfile.TemporaryDirectory() as first_dir, tempfile.TemporaryDirectory() as second_dir:
+            first_png = Path(first_dir) / 'sheet.png'
+            first_json = Path(first_dir) / 'sheet.json'
+            second_png = Path(second_dir) / 'sheet.png'
+            second_json = Path(second_dir) / 'sheet.json'
+            build_sheet(first_png, first_json)
+            build_sheet(second_png, second_json)
+            self.assertEqual(first_png.read_bytes(), second_png.read_bytes())
+            self.assertEqual(first_json.read_bytes(), second_json.read_bytes())
+
     def test_png_chunks_and_pixel_data_are_valid(self):
         data = self.png_path.read_bytes()
         self.assertEqual(data[:8], b'\x89PNG\r\n\x1a\n')
