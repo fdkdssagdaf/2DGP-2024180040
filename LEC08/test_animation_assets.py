@@ -125,6 +125,24 @@ class AnimationAssetTests(unittest.TestCase):
         self.assertEqual(set(constants['ANIMATIONS']), {'idle', 'walk', 'jump', 'attack'})
         self.assertGreaterEqual(constants['DISPLAY_HEIGHT'], constants['CANVAS_HEIGHT'] / 2)
 
+    def test_attack_draws_a_visible_slash(self):
+        viewer_path = Path(__file__).with_name('animation_viewer.py')
+        tree = ast.parse(viewer_path.read_text(encoding='utf-8'))
+        attack_branches = [
+            node for node in ast.walk(tree)
+            if isinstance(node, ast.If)
+            and any(isinstance(value, ast.Name) and value.id == 'animation' for value in ast.walk(node.test))
+            and any(isinstance(value, ast.Constant) and value.value == 'attack' for value in ast.walk(node.test))
+        ]
+        self.assertTrue(attack_branches)
+        slash_calls = [
+            node for branch in attack_branches for node in ast.walk(branch)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == 'draw_line'
+        ]
+        self.assertEqual(len(slash_calls), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

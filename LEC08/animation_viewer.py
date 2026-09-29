@@ -52,6 +52,11 @@ while running:
                     frame['left'], frame['bottom'], frame['width'], frame['height'],
                     x, y, draw_width, DISPLAY_HEIGHT,
                 )
+                if animation == 'attack' and 0.15 <= progress <= 0.85:
+                    swing = (progress - 0.15) / 0.7
+                    slash_y = y + 20 + math.sin(swing * math.pi) * 45
+                    draw_line(x + 30, slash_y, x + 115, slash_y + 95, 255, 245, 160)
+                    draw_line(x + 45, slash_y - 12, x + 125, slash_y + 75, 130, 235, 255)
                 update_canvas()
                 delay(1 / FPS)
 
