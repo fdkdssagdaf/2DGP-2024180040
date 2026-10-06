@@ -2,6 +2,8 @@ from pico2d import *
 
 
 TUK_WIDTH, TUK_HEIGHT = 1280, 1024
+IDLE_RIGHT_ROW, IDLE_LEFT_ROW = 300, 200
+RUN_RIGHT_ROW, RUN_LEFT_ROW = 100, 0
 open_canvas(TUK_WIDTH, TUK_HEIGHT)
 tuk_ground = load_image('TUK_GROUND.png')
 character = load_image('animation_sheet.png')
@@ -24,6 +26,7 @@ def handle_events():
 running = True
 keys_down = set()
 x, y = TUK_WIDTH // 2, TUK_HEIGHT // 2
+facing = 1
 frame = 0
 speed = 5
 
@@ -41,11 +44,18 @@ while running:
     next_x = max(50, min(TUK_WIDTH - 50, x + move_x * speed))
     next_y = max(50, min(TUK_HEIGHT - 50, y + move_y * speed))
     moving = next_x != x or next_y != y
+    if next_x != x:
+        facing = 1 if next_x > x else -1
     x, y = next_x, next_y
+
+    if moving:
+        row = RUN_RIGHT_ROW if facing > 0 else RUN_LEFT_ROW
+    else:
+        row = IDLE_RIGHT_ROW if facing > 0 else IDLE_LEFT_ROW
 
     clear_canvas()
     tuk_ground.draw(TUK_WIDTH // 2, TUK_HEIGHT // 2)
-    character.clip_draw(frame * 100, 100, 100, 100, x, y)
+    character.clip_draw(frame * 100, row, 100, 100, x, y)
     update_canvas()
 
     frame = (frame + 1) % 8
