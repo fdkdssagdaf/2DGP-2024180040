@@ -5,7 +5,6 @@
   1쪽: 게임 설명
   2쪽: 개발 계획과 현재 진행 상황
 - Shadow_Boundary_Second_Presentation.pptx: 발표 표지와 추가 안내를 포함한 버전
-- Shadow_Boundary_Second_Presentation_Script.txt: 약 90초 발표 대본
 
 게임 데모
 - shadow_boundary_demo.py: 한 구간 플레이 데모
