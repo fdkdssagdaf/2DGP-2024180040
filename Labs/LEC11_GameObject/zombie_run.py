@@ -7,11 +7,14 @@ import py_trees
 
 SCREEN_WIDTH = 960
 SCREEN_HEIGHT = 768
+SOURCE_WIDTH = 1280
+SOURCE_HEIGHT = 1024
 BALL_COUNT = 14
 BOY_SPEED = 8
 ZOMBIE_SPEED = 2
 BOY_DETECTION_RANGE = 150
 BOY_STOP_DISTANCE = 40
+FOOTBALL_TARGET_RANGE = 180
 IDLE_RIGHT_ROW, IDLE_LEFT_ROW = 300, 200
 RUN_RIGHT_ROW, RUN_LEFT_ROW = 100, 0
 ZOMBIE_FRAME_WIDTH = 430
@@ -19,6 +22,27 @@ ZOMBIE_FRAME_HEIGHT = 519
 ZOMBIE_FRAME_COUNT = 10
 ZOMBIE_DRAW_WIDTH = 120
 ZOMBIE_DRAW_HEIGHT = 145
+PATROL_POINTS_IMAGE = (
+    (43, 274),
+    (1118, 274),
+    (1050, 494),
+    (575, 804),
+    (235, 991),
+    (575, 804),
+    (1050, 494),
+    (1118, 274),
+)
+
+
+def image_point_to_screen(point):
+    x, y = point
+    return (
+        round(x * SCREEN_WIDTH / SOURCE_WIDTH),
+        round((SOURCE_HEIGHT - y) * SCREEN_HEIGHT / SOURCE_HEIGHT),
+    )
+
+
+PATROL_POINTS = tuple(image_point_to_screen(point) for point in PATROL_POINTS_IMAGE)
 
 
 def draw_target_markers(blackboard, marker):
@@ -87,6 +111,10 @@ class SetRandomBallTarget(py_trees.behaviour.Behaviour):
             football
             for football in self.footballs
             if football.ball_id not in reserved_ids
+            and math.hypot(
+                football.x - self.zombie.x,
+                football.y - self.zombie.y,
+            ) <= FOOTBALL_TARGET_RANGE
         ]
         if not candidates:
             self.zombie.target_ball = None
@@ -130,6 +158,32 @@ class MoveToTargetBall(py_trees.behaviour.Behaviour):
         if distance <= ZOMBIE_SPEED:
             self.zombie.x = target_x
             self.zombie.y = target_y
+            return py_trees.common.Status.SUCCESS
+
+        self.zombie.x += dx / distance * ZOMBIE_SPEED
+        self.zombie.y += dy / distance * ZOMBIE_SPEED
+        return py_trees.common.Status.RUNNING
+
+
+class MoveToPatrolPoint(py_trees.behaviour.Behaviour):
+    def __init__(self, zombie, point, index, blackboard):
+        super().__init__(name=f"Move To Patrol Point {index}")
+        self.zombie = zombie
+        self.point = point
+        self.blackboard = blackboard
+
+    def update(self):
+        targets = dict(self.blackboard.target_positions)
+        if targets.get(self.zombie.name) != self.point:
+            targets[self.zombie.name] = self.point
+            self.blackboard.target_positions = targets
+
+        target_x, target_y = self.point
+        dx = target_x - self.zombie.x
+        dy = target_y - self.zombie.y
+        distance = math.hypot(dx, dy)
+        if distance <= ZOMBIE_SPEED:
+            self.zombie.x, self.zombie.y = self.point
             return py_trees.common.Status.SUCCESS
 
         self.zombie.x += dx / distance * ZOMBIE_SPEED
@@ -353,10 +407,18 @@ for index, zombie in enumerate(zombies, start=1):
             RemoveTargetBall(zombie, footballs, blackboard),
         ],
     )
+    patrol_sequence = py_trees.composites.Sequence(
+        name=f"{zombie.name} Patrol Sequence",
+        memory=True,
+        children=[
+            MoveToPatrolPoint(zombie, point, point_index, blackboard)
+            for point_index, point in enumerate(PATROL_POINTS, start=1)
+        ],
+    )
     root = py_trees.composites.Selector(
         name=f"{zombie.name} Root Mode",
         memory=False,
-        children=[tracking_sequence, football_sequence],
+        children=[tracking_sequence, football_sequence, patrol_sequence],
     )
     zombie_trees.append(py_trees.trees.BehaviourTree(root))
 running = True
